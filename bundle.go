@@ -238,9 +238,6 @@ func main() {
 		return nil
 	})
 	js.Global().Call("requestAnimationFrame", renderFrame)
-
-	done := make(chan struct{}, 0)
-	<-done
 }
 
 func canvasResize(this js.Value, args []js.Value) interface{} {
