@@ -2,3 +2,4 @@ wasm-rotating-cube
 .idea
 *.stl
 wasm-stl-viewer
+main

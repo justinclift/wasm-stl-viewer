@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/bobcob7/wasm-stl-viewer/color"
+	"github.com/justinclift/wasm-stl-viewer/color"
 	"gitlab.com/russoj88/stl/stl"
 )
 

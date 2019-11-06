@@ -5,8 +5,8 @@ import (
 	"syscall/js"
 	"unsafe"
 
-	"github.com/bobcob7/wasm-stl-viewer/gltypes"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/justinclift/wasm-stl-viewer/gltypes"
 )
 
 type InitialConfig struct {

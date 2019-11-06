@@ -8,9 +8,9 @@ import (
 	"strings"
 	"syscall/js"
 
-	"github.com/bobcob7/wasm-stl-viewer/gltypes"
-	"github.com/bobcob7/wasm-stl-viewer/models"
-	"github.com/bobcob7/wasm-stl-viewer/renderer"
+	"github.com/justinclift/wasm-stl-viewer/gltypes"
+	"github.com/justinclift/wasm-stl-viewer/models"
+	"github.com/justinclift/wasm-stl-viewer/renderer"
 )
 
 var (
