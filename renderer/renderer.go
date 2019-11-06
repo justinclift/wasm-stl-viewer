@@ -1,9 +1,13 @@
 package renderer
 
 import (
+	"reflect"
+	"runtime"
+	"syscall/js"
+	"unsafe"
+
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/justinclift/wasm-stl-viewer/gltypes"
-	"syscall/js"
 )
 
 type InitialConfig struct {
@@ -22,9 +26,9 @@ type InitialConfig struct {
 type Renderer struct {
 	glContext      js.Value
 	glTypes        gltypes.GLTypes
-	//colors         js.TypedArray
-	//vertices       js.TypedArray
-	//indices        js.TypedArray
+	colors         js.Value
+	vertices       js.Value
+	indices        js.Value
 	colorBuffer    js.Value
 	vertexBuffer   js.Value
 	indexBuffer    js.Value
@@ -118,25 +122,26 @@ func (r *Renderer) SetSize(height, width int) {
 	r.height = height
 	r.width = width
 	println("Size", r.width, r.height)
-	//fmt.Println("Size", r.width, r.height)
 }
 
 func (r *Renderer) createMatrixes() {
-	//ratio := float32(r.width) / float32(r.height)
+	ratio := float32(r.width) / float32(r.height)
 	println("Renderer.createMatrixes")
 	// Generate and apply projection matrix
-	//projMatrix := mgl32.Perspective(mgl32.DegToRad(45.0), ratio, 1, 100000.0)
-	//var projMatrixBuffer *[16]float32
-	//projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
+	projMatrix := mgl32.Perspective(mgl32.DegToRad(45.0), ratio, 1, 100000.0)
+	var projMatrixBuffer *[16]float32
+	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
+	typedProjMatrixBuffer := SliceToTypedArray((*projMatrixBuffer)[:])
 	//typedProjMatrixBuffer := js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
-	//r.glContext.Call("uniformMatrix4fv", r.PositionMatrix, false, typedProjMatrixBuffer)
+	r.glContext.Call("uniformMatrix4fv", r.PositionMatrix, false, typedProjMatrixBuffer)
 
 	// Generate and apply view matrix
-	//viewMatrix := mgl32.LookAtV(mgl32.Vec3{3.0, 3.0, 3.0}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
-	//var viewMatrixBuffer *[16]float32
-	//viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
+	viewMatrix := mgl32.LookAtV(mgl32.Vec3{3.0, 3.0, 3.0}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
+	var viewMatrixBuffer *[16]float32
+	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
+	typedViewMatrixBuffer := SliceToTypedArray((*viewMatrixBuffer)[:])
 	//typedViewMatrixBuffer := js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
-	//r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
+	r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
 }
 
 func (r *Renderer) setContextFlags() {
@@ -197,35 +202,38 @@ func (r *Renderer) attachShaderProgram() {
 
 func (r *Renderer) UpdateColorBuffer(buffer []float32) {
 	println("Renderer.UpdateColorBuffer")
+	r.colors = SliceToTypedArray(buffer)
 	//r.colors = js.TypedArrayOf(buffer)
 	// Create color buffer
 	if r.colorBuffer == js.Undefined() {
 		r.colorBuffer = r.glContext.Call("createBuffer")
 	}
 	r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.colorBuffer)
-	//r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.colors, r.glTypes.StaticDraw)
+	r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.colors, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) UpdateVerticesBuffer(buffer []float32) {
 	println("Renderer.UpdateVerticesBuffer")
+	r.vertices = SliceToTypedArray(buffer)
 	//r.vertices = js.TypedArrayOf(buffer)
 	// Create vertex buffer
 	if r.vertexBuffer == js.Undefined() {
 		r.vertexBuffer = r.glContext.Call("createBuffer")
 	}
 	r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.vertexBuffer)
-	//r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.vertices, r.glTypes.StaticDraw)
+	r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.vertices, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) UpdateIndicesBuffer(buffer []uint32) {
 	println("Renderer.UpdateIndicesBuffer")
+	r.indices = SliceToTypedArray(buffer)
 	//r.indices = js.TypedArrayOf(buffer)
 	// Create index buffer
 	if r.indexBuffer == js.Undefined() {
 		r.indexBuffer = r.glContext.Call("createBuffer")
 	}
 	r.glContext.Call("bindBuffer", r.glTypes.ElementArrayBuffer, r.indexBuffer)
-	//r.glContext.Call("bufferData", r.glTypes.ElementArrayBuffer, r.indices, r.glTypes.StaticDraw)
+	r.glContext.Call("bufferData", r.glTypes.ElementArrayBuffer, r.indices, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
@@ -243,12 +251,13 @@ func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
 	r.movMatrix = r.movMatrix.Mul4(mgl32.HomogRotate3DZ(r.rotationZ))
 
 	// Convert model matrix to a JS TypedArray
-	//var modelMatrixBuffer *[16]float32
-	//modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&r.movMatrix))
+	var modelMatrixBuffer *[16]float32
+	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&r.movMatrix))
+	typedModelMatrixBuffer := SliceToTypedArray((*modelMatrixBuffer)[:])
 	//typedModelMatrixBuffer := js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 
 	// Apply the model matrix
-	//r.glContext.Call("uniformMatrix4fv", r.ModelMatrix, false, typedModelMatrixBuffer)
+	r.glContext.Call("uniformMatrix4fv", r.ModelMatrix, false, typedModelMatrixBuffer)
 
 	// Clear the screen
 	r.glContext.Call("enable", r.glTypes.DepthTest)
@@ -263,9 +272,116 @@ func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
 
 func (r *Renderer) SetZoom(currentZoom float32) {
 	println("Renderer.SetZoom")
-	//viewMatrix := mgl32.LookAtV(mgl32.Vec3{currentZoom, currentZoom, currentZoom}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
-	//var viewMatrixBuffer *[16]float32
-	//viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
+	viewMatrix := mgl32.LookAtV(mgl32.Vec3{currentZoom, currentZoom, currentZoom}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
+	var viewMatrixBuffer *[16]float32
+	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
+	typedViewMatrixBuffer := SliceToTypedArray((*viewMatrixBuffer)[:])
 	//typedViewMatrixBuffer := js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
-	//r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
+	r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
+}
+
+func sliceToByteSlice(s interface{}) []byte {
+	switch s := s.(type) {
+	case []int8:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []int16:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 2
+		h.Cap *= 2
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []int32:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 4
+		h.Cap *= 4
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []int64:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 8
+		h.Cap *= 8
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []uint8:
+		return s
+	case []uint16:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 2
+		h.Cap *= 2
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []uint32:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 4
+		h.Cap *= 4
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []uint64:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 8
+		h.Cap *= 8
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []float32:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 4
+		h.Cap *= 4
+		return *(*[]byte)(unsafe.Pointer(h))
+	case []float64:
+		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
+		h.Len *= 8
+		h.Cap *= 8
+		return *(*[]byte)(unsafe.Pointer(h))
+	default:
+		panic("jsutil: unexpected value at sliceToBytesSlice()")
+	}
+}
+
+func SliceToTypedArray(s interface{}) js.Value {
+	switch s := s.(type) {
+	case []int8:
+		a := js.Global().Get("Uint8Array").New(len(s))
+		js.CopyBytesToJS(a, sliceToByteSlice(s))
+		runtime.KeepAlive(s)
+		buf := a.Get("buffer")
+		return js.Global().Get("Int8Array").New(buf, a.Get("byteOffset"), a.Get("byteLength"))
+	case []int16:
+		a := js.Global().Get("Uint8Array").New(len(s) * 2)
+		js.CopyBytesToJS(a, sliceToByteSlice(s))
+		runtime.KeepAlive(s)
+		buf := a.Get("buffer")
+		return js.Global().Get("Int16Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/2)
+	case []int32:
+		a := js.Global().Get("Uint8Array").New(len(s) * 4)
+		js.CopyBytesToJS(a, sliceToByteSlice(s))
+		runtime.KeepAlive(s)
+		buf := a.Get("buffer")
+		return js.Global().Get("Int32Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/4)
+	case []uint8:
+		a := js.Global().Get("Uint8Array").New(len(s))
+		js.CopyBytesToJS(a, s)
+		runtime.KeepAlive(s)
+		return a
+	case []uint16:
+		a := js.Global().Get("Uint8Array").New(len(s) * 2)
+		js.CopyBytesToJS(a, sliceToByteSlice(s))
+		runtime.KeepAlive(s)
+		buf := a.Get("buffer")
+		return js.Global().Get("Uint16Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/2)
+	case []uint32:
+		a := js.Global().Get("Uint8Array").New(len(s) * 4)
+		js.CopyBytesToJS(a, sliceToByteSlice(s))
+		runtime.KeepAlive(s)
+		buf := a.Get("buffer")
+		return js.Global().Get("Uint32Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/4)
+	case []float32:
+		a := js.Global().Get("Uint8Array").New(len(s) * 4)
+		js.CopyBytesToJS(a, sliceToByteSlice(s))
+		runtime.KeepAlive(s)
+		buf := a.Get("buffer")
+		return js.Global().Get("Float32Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/4)
+	case []float64:
+		a := js.Global().Get("Uint8Array").New(len(s) * 8)
+		js.CopyBytesToJS(a, sliceToByteSlice(s))
+		runtime.KeepAlive(s)
+		buf := a.Get("buffer")
+		return js.Global().Get("Float64Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/8)
+	default:
+		panic("jsutil: unexpected value at SliceToTypedArray()")
+	}
 }

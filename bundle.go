@@ -217,7 +217,7 @@ func main() {
 	var err error
 	render, err = renderer.NewRenderer(gl, config)
 	if err != nil {
-		js.Global().Call("alert", "Cannot load webgl " + err.Error())
+		js.Global().Call("alert", "Cannot load webgl "+err.Error())
 		return
 	}
 	render.SetZoom(currentZoom)
