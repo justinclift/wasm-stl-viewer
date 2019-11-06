@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/justinclift/stl/stl"
 	"github.com/justinclift/wasm-stl-viewer/color"
-	"gitlab.com/russoj88/stl/stl"
 )
 
 func NewSTL(buffer []byte) (output STL, err error) {
