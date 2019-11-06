@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"syscall/js"
 
@@ -75,7 +75,7 @@ func uploading(this js.Value, args []js.Value) interface{} {
 	files := this.Get("files")
 	file := files.Index(0)
 	currentFileName := file.Get("name").String()
-	fmt.Println("Uploading", currentFileName)
+	println("Uploading", currentFileName)
 	reader.Call("readAsDataURL", file)
 	return nil
 }
@@ -92,12 +92,12 @@ func parseBase64File(input string) (output []byte, err error) {
 }
 
 func uploaded(this js.Value, args []js.Value) interface{} {
-	fmt.Println("Finished uploading")
+	println("Finished uploading")
 	result := args[0].Get("target").Get("result").String()
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Println("Recovered in upload", r)
+				println("Recovered in upload", r)
 				js.Global().Call("alert", "Failed to parse file")
 			}
 		}()
@@ -135,17 +135,17 @@ func scalar(x float32, y float32, z float32) float32 {
 }
 
 func uploadError(this js.Value, args []js.Value) interface{} {
-	fmt.Println("Uploading Error")
+	println("Uploading Error")
 	return nil
 }
 
 func uploadAborted(this js.Value, args []js.Value) interface{} {
-	fmt.Println("Upload Aborted")
+	println("Upload Aborted")
 	return nil
 }
 
 func main() {
-	fmt.Println("Returned normally from f.")
+	println("Returned normally from f.")
 
 	// Init Canvas stuff
 	doc := js.Global().Get("document")
@@ -217,19 +217,19 @@ func main() {
 	var err error
 	render, err = renderer.NewRenderer(gl, config)
 	if err != nil {
-		js.Global().Call("alert", fmt.Sprintf("Cannot load webgl %v", err))
+		js.Global().Call("alert", "Cannot load webgl " + err.Error())
 		return
 	}
 	render.SetZoom(currentZoom)
 	defer render.Release()
 
 	x, y, z := render.GetSpeed()
-	speedSliderX.Set("value", fmt.Sprint(x))
-	speedSliderXValue.Set("innerHTML", fmt.Sprint(x))
-	speedSliderY.Set("value", fmt.Sprint(y))
-	speedSliderYValue.Set("innerHTML", fmt.Sprint(y))
-	speedSliderZ.Set("value", fmt.Sprint(z))
-	speedSliderZValue.Set("innerHTML", fmt.Sprint(z))
+	speedSliderX.Set("value", strconv.FormatFloat(float64(x), 'f', 0, 32))
+	speedSliderXValue.Set("innerHTML", strconv.FormatFloat(float64(x), 'f', 0, 32))
+	speedSliderY.Set("value", strconv.FormatFloat(float64(y), 'f', 0, 32))
+	speedSliderYValue.Set("innerHTML", strconv.FormatFloat(float64(y), 'f', 0, 32))
+	speedSliderZ.Set("value", strconv.FormatFloat(float64(z), 'f', 0, 32))
+	speedSliderZValue.Set("innerHTML", strconv.FormatFloat(float64(z), 'f', 0, 32))
 
 	var renderFrame js.Func
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -252,7 +252,7 @@ func canvasResize(this js.Value, args []js.Value) interface{} {
 func sliderChangeX(this js.Value, args []js.Value) interface{} {
 	var speed float32
 	sSpeed := this.Get("value").String()
-	fmt.Sscan(sSpeed, &speed)
+	//fmt.Sscan(sSpeed, &speed) // TODO: Figure out a replacement for fmt.Sscan()
 	render.SetSpeedX(speed)
 	speedSliderXValue.Set("innerHTML", sSpeed)
 	return nil
@@ -261,7 +261,7 @@ func sliderChangeX(this js.Value, args []js.Value) interface{} {
 func sliderChangeY(this js.Value, args []js.Value) interface{} {
 	var speed float32
 	sSpeed := this.Get("value").String()
-	fmt.Sscan(sSpeed, &speed)
+	//fmt.Sscan(sSpeed, &speed)
 	render.SetSpeedY(speed)
 	speedSliderYValue.Set("innerHTML", sSpeed)
 	return nil
@@ -270,7 +270,7 @@ func sliderChangeY(this js.Value, args []js.Value) interface{} {
 func sliderChangeZ(this js.Value, args []js.Value) interface{} {
 	var speed float32
 	sSpeed := this.Get("value").String()
-	fmt.Sscan(sSpeed, &speed)
+	//fmt.Sscan(sSpeed, &speed)
 	render.SetSpeedZ(speed)
 	speedSliderZValue.Set("innerHTML", sSpeed)
 	return nil

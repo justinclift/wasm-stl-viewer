@@ -2,7 +2,6 @@ package models
 
 import (
 	"bytes"
-	"fmt"
 	"math/rand"
 
 	"github.com/justinclift/stl/stl"
@@ -16,12 +15,14 @@ func NewSTL(buffer []byte) (output STL, err error) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("Parsed in %d Triangles\n", solid.TriangleCount)
+	println("Parsed in %d Triangles\n", solid.TriangleCount)
+
 	// Generate random color gradient
 	numColors := (rand.Int() % 5) + 2
 	colors := color.GenerateGradient(numColors, int(solid.TriangleCount))
-	var index uint32 = 0
+
 	// Make Vertice array
+	var index uint32 = 0
 	for i, triangle := range solid.Triangles {
 
 		colorR := colors[i].Red
