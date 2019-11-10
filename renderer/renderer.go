@@ -1,13 +1,11 @@
 package renderer
 
 import (
-	"reflect"
-	"runtime"
 	"syscall/js"
 	"unsafe"
 
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/justinclift/wasm-stl-viewer/gltypes"
+	"github.com/justinclift/webgl"
 )
 
 type InitialConfig struct {
@@ -25,7 +23,7 @@ type InitialConfig struct {
 
 type Renderer struct {
 	glContext      js.Value
-	glTypes        gltypes.GLTypes
+	//glTypes        gltypes.GLTypes
 	colors         js.Value
 	vertices       js.Value
 	indices        js.Value
@@ -54,7 +52,7 @@ type Renderer struct {
 func NewRenderer(gl js.Value, config InitialConfig) (r Renderer, err error) {
 	// Get some WebGL bindings
 	r.glContext = gl
-	err = r.glTypes.New(r.glContext)
+	//err = r.glTypes.New(r.glContext)
 	r.numIndices = len(config.Indices)
 	r.movMatrix = mgl32.Ident4()
 	r.width = config.Width
@@ -99,7 +97,8 @@ func (r *Renderer) Release() {
 
 func (r *Renderer) EnableObject() {
 	println("Renderer.EnableObject")
-	r.glContext.Call("bindBuffer", r.glTypes.ElementArrayBuffer, r.indexBuffer)
+	r.glContext.Call("bindBuffer", webgl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
+	//r.glContext.Call("bindBuffer", r.glTypes.ElementArrayBuffer, r.indexBuffer)
 }
 
 func (r *Renderer) SetSpeedX(x float32) {
@@ -131,7 +130,7 @@ func (r *Renderer) createMatrixes() {
 	projMatrix := mgl32.Perspective(mgl32.DegToRad(45.0), ratio, 1, 100000.0)
 	var projMatrixBuffer *[16]float32
 	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
-	typedProjMatrixBuffer := SliceToTypedArray((*projMatrixBuffer)[:])
+	typedProjMatrixBuffer := webgl.SliceToTypedArray((*projMatrixBuffer)[:])
 	//typedProjMatrixBuffer := js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
 	r.glContext.Call("uniformMatrix4fv", r.PositionMatrix, false, typedProjMatrixBuffer)
 
@@ -139,7 +138,7 @@ func (r *Renderer) createMatrixes() {
 	viewMatrix := mgl32.LookAtV(mgl32.Vec3{3.0, 3.0, 3.0}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
-	typedViewMatrixBuffer := SliceToTypedArray((*viewMatrixBuffer)[:])
+	typedViewMatrixBuffer := webgl.SliceToTypedArray((*viewMatrixBuffer)[:])
 	//typedViewMatrixBuffer := js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
 	r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
 }
@@ -150,13 +149,15 @@ func (r *Renderer) setContextFlags() {
 	r.glContext.Call("clearColor", 0.0, 0.0, 0.0, 1.0)    // Color the screen is cleared to
 	r.glContext.Call("clearDepth", 1.0)                   // Z value that is set to the Depth buffer every frame
 	r.glContext.Call("viewport", 0, 0, r.width, r.height) // Viewport size
-	r.glContext.Call("depthFunc", r.glTypes.LEqual)
+	r.glContext.Call("depthFunc", webgl.LEQUAL)
+	//r.glContext.Call("depthFunc", r.glTypes.LEqual)
 }
 
 func (r *Renderer) UpdateFragmentShader(shaderCode string) {
 	println("Renderer.UpdateFragmentShader")
 	// Create fragment shader object
-	r.fragShader = r.glContext.Call("createShader", r.glTypes.FragmentShader)
+	r.fragShader = r.glContext.Call("createShader", webgl.FRAGMENT_SHADER)
+	//r.fragShader = r.glContext.Call("createShader", r.glTypes.FragmentShader)
 	r.glContext.Call("shaderSource", r.fragShader, shaderCode)
 	r.glContext.Call("compileShader", r.fragShader)
 }
@@ -164,7 +165,8 @@ func (r *Renderer) UpdateFragmentShader(shaderCode string) {
 func (r *Renderer) UpdateVertexShader(shaderCode string) {
 	println("Renderer.UpdateVertexShader")
 	// Create vertex shader object
-	r.vertShader = r.glContext.Call("createShader", r.glTypes.VertexShader)
+	r.vertShader = r.glContext.Call("createShader", webgl.VERTEX_SHADER)
+	//r.vertShader = r.glContext.Call("createShader", r.glTypes.VertexShader)
 	r.glContext.Call("shaderSource", r.vertShader, shaderCode)
 	r.glContext.Call("compileShader", r.vertShader)
 }
@@ -187,14 +189,18 @@ func (r *Renderer) attachShaderProgram() {
 	r.ViewMatrix = r.glContext.Call("getUniformLocation", r.shaderProgram, "Vmatrix")
 	r.ModelMatrix = r.glContext.Call("getUniformLocation", r.shaderProgram, "Mmatrix")
 
-	r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.vertexBuffer)
+	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.vertexBuffer)
+	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.vertexBuffer)
 	position := r.glContext.Call("getAttribLocation", r.shaderProgram, "position")
-	r.glContext.Call("vertexAttribPointer", position, 3, r.glTypes.Float, false, 0, 0)
+	r.glContext.Call("vertexAttribPointer", position, 3, webgl.FLOAT, false, 0, 0)
+	//r.glContext.Call("vertexAttribPointer", position, 3, r.glTypes.Float, false, 0, 0)
 	r.glContext.Call("enableVertexAttribArray", position)
 
-	r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.colorBuffer)
+	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.colorBuffer)
+	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.colorBuffer)
 	color := r.glContext.Call("getAttribLocation", r.shaderProgram, "color")
-	r.glContext.Call("vertexAttribPointer", color, 3, r.glTypes.Float, false, 0, 0)
+	r.glContext.Call("vertexAttribPointer", color, 3, webgl.FLOAT, false, 0, 0)
+	//r.glContext.Call("vertexAttribPointer", color, 3, r.glTypes.Float, false, 0, 0)
 	r.glContext.Call("enableVertexAttribArray", color)
 
 	r.glContext.Call("useProgram", r.shaderProgram)
@@ -202,38 +208,44 @@ func (r *Renderer) attachShaderProgram() {
 
 func (r *Renderer) UpdateColorBuffer(buffer []float32) {
 	println("Renderer.UpdateColorBuffer")
-	r.colors = SliceToTypedArray(buffer)
+	r.colors = webgl.SliceToTypedArray(buffer)
 	//r.colors = js.TypedArrayOf(buffer)
 	// Create color buffer
 	if r.colorBuffer == js.Undefined() {
 		r.colorBuffer = r.glContext.Call("createBuffer")
 	}
-	r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.colorBuffer)
-	r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.colors, r.glTypes.StaticDraw)
+	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.colorBuffer)
+	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.colorBuffer)
+	r.glContext.Call("bufferData", webgl.ARRAY_BUFFER, r.colors, webgl.STATIC_DRAW)
+	//r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.colors, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) UpdateVerticesBuffer(buffer []float32) {
 	println("Renderer.UpdateVerticesBuffer")
-	r.vertices = SliceToTypedArray(buffer)
+	r.vertices = webgl.SliceToTypedArray(buffer)
 	//r.vertices = js.TypedArrayOf(buffer)
 	// Create vertex buffer
 	if r.vertexBuffer == js.Undefined() {
 		r.vertexBuffer = r.glContext.Call("createBuffer")
 	}
-	r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.vertexBuffer)
-	r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.vertices, r.glTypes.StaticDraw)
+	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.vertexBuffer)
+	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.vertexBuffer)
+	r.glContext.Call("bufferData", webgl.ARRAY_BUFFER, r.vertices, webgl.STATIC_DRAW)
+	//r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.vertices, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) UpdateIndicesBuffer(buffer []uint32) {
 	println("Renderer.UpdateIndicesBuffer")
-	r.indices = SliceToTypedArray(buffer)
+	r.indices = webgl.SliceToTypedArray(buffer)
 	//r.indices = js.TypedArrayOf(buffer)
 	// Create index buffer
 	if r.indexBuffer == js.Undefined() {
 		r.indexBuffer = r.glContext.Call("createBuffer")
 	}
-	r.glContext.Call("bindBuffer", r.glTypes.ElementArrayBuffer, r.indexBuffer)
-	r.glContext.Call("bufferData", r.glTypes.ElementArrayBuffer, r.indices, r.glTypes.StaticDraw)
+	r.glContext.Call("bindBuffer", webgl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
+	//r.glContext.Call("bindBuffer", r.glTypes.ElementArrayBuffer, r.indexBuffer)
+	r.glContext.Call("bufferData", webgl.ELEMENT_ARRAY_BUFFER, r.indices, webgl.STATIC_DRAW)
+	//r.glContext.Call("bufferData", r.glTypes.ElementArrayBuffer, r.indices, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
@@ -253,19 +265,23 @@ func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
 	// Convert model matrix to a JS TypedArray
 	var modelMatrixBuffer *[16]float32
 	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&r.movMatrix))
-	typedModelMatrixBuffer := SliceToTypedArray((*modelMatrixBuffer)[:])
+	typedModelMatrixBuffer := webgl.SliceToTypedArray((*modelMatrixBuffer)[:])
 	//typedModelMatrixBuffer := js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 
 	// Apply the model matrix
 	r.glContext.Call("uniformMatrix4fv", r.ModelMatrix, false, typedModelMatrixBuffer)
 
 	// Clear the screen
-	r.glContext.Call("enable", r.glTypes.DepthTest)
-	r.glContext.Call("clear", r.glTypes.ColorBufferBit)
-	r.glContext.Call("clear", r.glTypes.DepthBufferBit)
+	r.glContext.Call("enable", webgl.DEPTH_TEST)
+	//r.glContext.Call("enable", r.glTypes.DepthTest)
+	r.glContext.Call("clear", webgl.COLOR_BUFFER_BIT)
+	//r.glContext.Call("clear", r.glTypes.ColorBufferBit)
+	r.glContext.Call("clear", webgl.DEPTH_BUFFER_BIT)
+	//r.glContext.Call("clear", r.glTypes.DepthBufferBit)
 
 	// Draw the cube
-	r.glContext.Call("drawElements", r.glTypes.Triangles, r.numIndices, r.glTypes.UnsignedInt, 0)
+	r.glContext.Call("drawElements", webgl.TRIANGLES, r.numIndices, webgl.UNSIGNED_INT, 0)
+	//r.glContext.Call("drawElements", r.glTypes.Triangles, r.numIndices, r.glTypes.UnsignedInt, 0)
 
 	return nil
 }
@@ -275,113 +291,7 @@ func (r *Renderer) SetZoom(currentZoom float32) {
 	viewMatrix := mgl32.LookAtV(mgl32.Vec3{currentZoom, currentZoom, currentZoom}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
-	typedViewMatrixBuffer := SliceToTypedArray((*viewMatrixBuffer)[:])
+	typedViewMatrixBuffer := webgl.SliceToTypedArray((*viewMatrixBuffer)[:])
 	//typedViewMatrixBuffer := js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
 	r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
-}
-
-func sliceToByteSlice(s interface{}) []byte {
-	switch s := s.(type) {
-	case []int8:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []int16:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 2
-		h.Cap *= 2
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []int32:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 4
-		h.Cap *= 4
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []int64:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 8
-		h.Cap *= 8
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []uint8:
-		return s
-	case []uint16:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 2
-		h.Cap *= 2
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []uint32:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 4
-		h.Cap *= 4
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []uint64:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 8
-		h.Cap *= 8
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []float32:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 4
-		h.Cap *= 4
-		return *(*[]byte)(unsafe.Pointer(h))
-	case []float64:
-		h := (*reflect.SliceHeader)(unsafe.Pointer(&s))
-		h.Len *= 8
-		h.Cap *= 8
-		return *(*[]byte)(unsafe.Pointer(h))
-	default:
-		panic("jsutil: unexpected value at sliceToBytesSlice()")
-	}
-}
-
-func SliceToTypedArray(s interface{}) js.Value {
-	switch s := s.(type) {
-	case []int8:
-		a := js.Global().Get("Uint8Array").New(len(s))
-		js.CopyBytesToJS(a, sliceToByteSlice(s))
-		runtime.KeepAlive(s)
-		buf := a.Get("buffer")
-		return js.Global().Get("Int8Array").New(buf, a.Get("byteOffset"), a.Get("byteLength"))
-	case []int16:
-		a := js.Global().Get("Uint8Array").New(len(s) * 2)
-		js.CopyBytesToJS(a, sliceToByteSlice(s))
-		runtime.KeepAlive(s)
-		buf := a.Get("buffer")
-		return js.Global().Get("Int16Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/2)
-	case []int32:
-		a := js.Global().Get("Uint8Array").New(len(s) * 4)
-		js.CopyBytesToJS(a, sliceToByteSlice(s))
-		runtime.KeepAlive(s)
-		buf := a.Get("buffer")
-		return js.Global().Get("Int32Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/4)
-	case []uint8:
-		a := js.Global().Get("Uint8Array").New(len(s))
-		js.CopyBytesToJS(a, s)
-		runtime.KeepAlive(s)
-		return a
-	case []uint16:
-		a := js.Global().Get("Uint8Array").New(len(s) * 2)
-		js.CopyBytesToJS(a, sliceToByteSlice(s))
-		runtime.KeepAlive(s)
-		buf := a.Get("buffer")
-		return js.Global().Get("Uint16Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/2)
-	case []uint32:
-		a := js.Global().Get("Uint8Array").New(len(s) * 4)
-		js.CopyBytesToJS(a, sliceToByteSlice(s))
-		runtime.KeepAlive(s)
-		buf := a.Get("buffer")
-		return js.Global().Get("Uint32Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/4)
-	case []float32:
-		a := js.Global().Get("Uint8Array").New(len(s) * 4)
-		js.CopyBytesToJS(a, sliceToByteSlice(s))
-		runtime.KeepAlive(s)
-		buf := a.Get("buffer")
-		return js.Global().Get("Float32Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/4)
-	case []float64:
-		a := js.Global().Get("Uint8Array").New(len(s) * 8)
-		js.CopyBytesToJS(a, sliceToByteSlice(s))
-		runtime.KeepAlive(s)
-		buf := a.Get("buffer")
-		return js.Global().Get("Float64Array").New(buf, a.Get("byteOffset"), a.Get("byteLength").Int()/8)
-	default:
-		panic("jsutil: unexpected value at SliceToTypedArray()")
-	}
 }
