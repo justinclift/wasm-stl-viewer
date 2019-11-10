@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	gl      js.Value
-	//glTypes gltypes.GLTypes
+	gl js.Value
 )
 
 //// BUFFERS + SHADERS ////

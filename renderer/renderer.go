@@ -23,7 +23,6 @@ type InitialConfig struct {
 
 type Renderer struct {
 	glContext      js.Value
-	//glTypes        gltypes.GLTypes
 	colors         js.Value
 	vertices       js.Value
 	indices        js.Value
@@ -131,7 +130,6 @@ func (r *Renderer) createMatrixes() {
 	var projMatrixBuffer *[16]float32
 	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
 	typedProjMatrixBuffer := webgl.SliceToTypedArray((*projMatrixBuffer)[:])
-	//typedProjMatrixBuffer := js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
 	r.glContext.Call("uniformMatrix4fv", r.PositionMatrix, false, typedProjMatrixBuffer)
 
 	// Generate and apply view matrix
@@ -139,7 +137,6 @@ func (r *Renderer) createMatrixes() {
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
 	typedViewMatrixBuffer := webgl.SliceToTypedArray((*viewMatrixBuffer)[:])
-	//typedViewMatrixBuffer := js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
 	r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
 }
 
@@ -150,14 +147,12 @@ func (r *Renderer) setContextFlags() {
 	r.glContext.Call("clearDepth", 1.0)                   // Z value that is set to the Depth buffer every frame
 	r.glContext.Call("viewport", 0, 0, r.width, r.height) // Viewport size
 	r.glContext.Call("depthFunc", webgl.LEQUAL)
-	//r.glContext.Call("depthFunc", r.glTypes.LEqual)
 }
 
 func (r *Renderer) UpdateFragmentShader(shaderCode string) {
 	println("Renderer.UpdateFragmentShader")
 	// Create fragment shader object
 	r.fragShader = r.glContext.Call("createShader", webgl.FRAGMENT_SHADER)
-	//r.fragShader = r.glContext.Call("createShader", r.glTypes.FragmentShader)
 	r.glContext.Call("shaderSource", r.fragShader, shaderCode)
 	r.glContext.Call("compileShader", r.fragShader)
 }
@@ -166,7 +161,6 @@ func (r *Renderer) UpdateVertexShader(shaderCode string) {
 	println("Renderer.UpdateVertexShader")
 	// Create vertex shader object
 	r.vertShader = r.glContext.Call("createShader", webgl.VERTEX_SHADER)
-	//r.vertShader = r.glContext.Call("createShader", r.glTypes.VertexShader)
 	r.glContext.Call("shaderSource", r.vertShader, shaderCode)
 	r.glContext.Call("compileShader", r.vertShader)
 }
@@ -190,17 +184,13 @@ func (r *Renderer) attachShaderProgram() {
 	r.ModelMatrix = r.glContext.Call("getUniformLocation", r.shaderProgram, "Mmatrix")
 
 	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.vertexBuffer)
-	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.vertexBuffer)
 	position := r.glContext.Call("getAttribLocation", r.shaderProgram, "position")
 	r.glContext.Call("vertexAttribPointer", position, 3, webgl.FLOAT, false, 0, 0)
-	//r.glContext.Call("vertexAttribPointer", position, 3, r.glTypes.Float, false, 0, 0)
 	r.glContext.Call("enableVertexAttribArray", position)
 
 	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.colorBuffer)
-	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.colorBuffer)
 	color := r.glContext.Call("getAttribLocation", r.shaderProgram, "color")
 	r.glContext.Call("vertexAttribPointer", color, 3, webgl.FLOAT, false, 0, 0)
-	//r.glContext.Call("vertexAttribPointer", color, 3, r.glTypes.Float, false, 0, 0)
 	r.glContext.Call("enableVertexAttribArray", color)
 
 	r.glContext.Call("useProgram", r.shaderProgram)
@@ -209,43 +199,34 @@ func (r *Renderer) attachShaderProgram() {
 func (r *Renderer) UpdateColorBuffer(buffer []float32) {
 	println("Renderer.UpdateColorBuffer")
 	r.colors = webgl.SliceToTypedArray(buffer)
-	//r.colors = js.TypedArrayOf(buffer)
 	// Create color buffer
 	if r.colorBuffer == js.Undefined() {
 		r.colorBuffer = r.glContext.Call("createBuffer")
 	}
 	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.colorBuffer)
-	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.colorBuffer)
 	r.glContext.Call("bufferData", webgl.ARRAY_BUFFER, r.colors, webgl.STATIC_DRAW)
-	//r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.colors, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) UpdateVerticesBuffer(buffer []float32) {
 	println("Renderer.UpdateVerticesBuffer")
 	r.vertices = webgl.SliceToTypedArray(buffer)
-	//r.vertices = js.TypedArrayOf(buffer)
 	// Create vertex buffer
 	if r.vertexBuffer == js.Undefined() {
 		r.vertexBuffer = r.glContext.Call("createBuffer")
 	}
 	r.glContext.Call("bindBuffer", webgl.ARRAY_BUFFER, r.vertexBuffer)
-	//r.glContext.Call("bindBuffer", r.glTypes.ArrayBuffer, r.vertexBuffer)
 	r.glContext.Call("bufferData", webgl.ARRAY_BUFFER, r.vertices, webgl.STATIC_DRAW)
-	//r.glContext.Call("bufferData", r.glTypes.ArrayBuffer, r.vertices, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) UpdateIndicesBuffer(buffer []uint32) {
 	println("Renderer.UpdateIndicesBuffer")
 	r.indices = webgl.SliceToTypedArray(buffer)
-	//r.indices = js.TypedArrayOf(buffer)
 	// Create index buffer
 	if r.indexBuffer == js.Undefined() {
 		r.indexBuffer = r.glContext.Call("createBuffer")
 	}
 	r.glContext.Call("bindBuffer", webgl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
-	//r.glContext.Call("bindBuffer", r.glTypes.ElementArrayBuffer, r.indexBuffer)
 	r.glContext.Call("bufferData", webgl.ELEMENT_ARRAY_BUFFER, r.indices, webgl.STATIC_DRAW)
-	//r.glContext.Call("bufferData", r.glTypes.ElementArrayBuffer, r.indices, r.glTypes.StaticDraw)
 }
 
 func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
@@ -266,22 +247,17 @@ func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
 	var modelMatrixBuffer *[16]float32
 	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&r.movMatrix))
 	typedModelMatrixBuffer := webgl.SliceToTypedArray((*modelMatrixBuffer)[:])
-	//typedModelMatrixBuffer := js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 
 	// Apply the model matrix
 	r.glContext.Call("uniformMatrix4fv", r.ModelMatrix, false, typedModelMatrixBuffer)
 
 	// Clear the screen
 	r.glContext.Call("enable", webgl.DEPTH_TEST)
-	//r.glContext.Call("enable", r.glTypes.DepthTest)
 	r.glContext.Call("clear", webgl.COLOR_BUFFER_BIT)
-	//r.glContext.Call("clear", r.glTypes.ColorBufferBit)
 	r.glContext.Call("clear", webgl.DEPTH_BUFFER_BIT)
-	//r.glContext.Call("clear", r.glTypes.DepthBufferBit)
 
 	// Draw the cube
 	r.glContext.Call("drawElements", webgl.TRIANGLES, r.numIndices, webgl.UNSIGNED_INT, 0)
-	//r.glContext.Call("drawElements", r.glTypes.Triangles, r.numIndices, r.glTypes.UnsignedInt, 0)
 
 	return nil
 }
@@ -292,6 +268,5 @@ func (r *Renderer) SetZoom(currentZoom float32) {
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
 	typedViewMatrixBuffer := webgl.SliceToTypedArray((*viewMatrixBuffer)[:])
-	//typedViewMatrixBuffer := js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
 	r.glContext.Call("uniformMatrix4fv", r.ViewMatrix, false, typedViewMatrixBuffer)
 }
