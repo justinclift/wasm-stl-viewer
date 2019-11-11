@@ -51,7 +51,6 @@ type Renderer struct {
 func NewRenderer(gl js.Value, config InitialConfig) (r Renderer, err error) {
 	// Get some WebGL bindings
 	r.glContext = gl
-	//err = r.glTypes.New(r.glContext)
 	r.numIndices = len(config.Indices)
 	r.movMatrix = mgl32.Ident4()
 	r.width = config.Width

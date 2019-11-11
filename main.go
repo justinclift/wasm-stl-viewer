@@ -69,6 +69,7 @@ var speedSliderZValue js.Value
 var canvasElement js.Value
 var currentZoom float32 = 3
 
+//go:export uploading
 func uploading(this js.Value, args []js.Value) interface{} {
 	files := this.Get("files")
 	file := files.Index(0)
@@ -89,6 +90,7 @@ func parseBase64File(input string) (output []byte, err error) {
 	return base64.StdEncoding.DecodeString(sBuffer)
 }
 
+//go:export uploaded
 func uploaded(this js.Value, args []js.Value) interface{} {
 	println("Finished uploading")
 	result := args[0].Get("target").Get("result").String()
@@ -132,64 +134,47 @@ func scalar(x float32, y float32, z float32) float32 {
 	return float32(math.Sqrt(xy*xy + float64(z*z)))
 }
 
+//go:export uploadError
 func uploadError(this js.Value, args []js.Value) interface{} {
 	println("Uploading Error")
 	return nil
 }
 
+//go:export uploadAborted
 func uploadAborted(this js.Value, args []js.Value) interface{} {
 	println("Upload Aborted")
 	return nil
 }
 
 func main() {
-	println("Returned normally from f.")
-
 	// Init Canvas stuff
 	doc := js.Global().Get("document")
-
-	canvasResizeCallback := js.FuncOf(canvasResize)
-	canvasElement = doc.Call("getElementById", "gocanvas")
-	js.Global().Get("window").Call("addEventListener", "resize", canvasResizeCallback)
-
+	canvasElement = doc.Call("getElementById", "mycanvas")
 	width := canvasElement.Get("clientWidth").Int()
 	height := canvasElement.Get("clientHeight").Int()
 	canvasElement.Set("width", width)
 	canvasElement.Set("height", height)
-	upload := doc.Call("getElementById", "upload")
+
 	newReader := js.Global().Get("FileReader")
 	reader = newReader.New()
 
-	sliderSpeedXCallback := js.FuncOf(sliderChangeX)
 	speedSliderX := doc.Call("getElementById", "speedSliderX")
-	speedSliderX.Call("addEventListener", "input", sliderSpeedXCallback)
 	speedSliderXValue = doc.Call("getElementById", "speedSliderXValue")
-
-	sliderSpeedYCallback := js.FuncOf(sliderChangeY)
 	speedSliderY := doc.Call("getElementById", "speedSliderY")
-	speedSliderY.Call("addEventListener", "input", sliderSpeedYCallback)
 	speedSliderYValue = doc.Call("getElementById", "speedSliderYValue")
-
-	sliderSpeedZCallback := js.FuncOf(sliderChangeZ)
 	speedSliderZ := doc.Call("getElementById", "speedSliderZ")
-	speedSliderZ.Call("addEventListener", "input", sliderSpeedZCallback)
 	speedSliderZValue = doc.Call("getElementById", "speedSliderZValue")
 
-	zoomChangeCallback := js.FuncOf(zoomChange)
-	js.Global().Get("window").Call("addEventListener", "wheel", zoomChangeCallback)
-
-	uploadCallback := js.FuncOf(uploading)
-	uploadedCallback := js.FuncOf(uploaded)
-	errorUploadCallback := js.FuncOf(uploadError)
-	uploadAbortedCallback := js.FuncOf(uploadAborted)
-	defer uploadCallback.Release()
-	defer uploadedCallback.Release()
-	defer errorUploadCallback.Release()
-	defer uploadAbortedCallback.Release()
-	reader.Call("addEventListener", "load", uploadedCallback)
-	reader.Call("addEventListener", "error", errorUploadCallback)
-	reader.Call("addEventListener", "abort", uploadAbortedCallback)
-	upload.Call("addEventListener", "change", uploadCallback)
+	// Comment these out for now, until I figure out how to convert them to exported functions TinyGo is happy with
+	//uploadedCallback := js.FuncOf(uploaded)
+	//errorUploadCallback := js.FuncOf(uploadError)
+	//uploadAbortedCallback := js.FuncOf(uploadAborted)
+	//defer uploadedCallback.Release()
+	//defer errorUploadCallback.Release()
+	//defer uploadAbortedCallback.Release()
+	//reader.Call("addEventListener", "load", uploadedCallback)
+	//reader.Call("addEventListener", "error", errorUploadCallback)
+	//reader.Call("addEventListener", "abort", uploadAbortedCallback)
 
 	gl = canvasElement.Call("getContext", "webgl")
 	if gl == js.Undefined() {
@@ -199,7 +184,6 @@ func main() {
 		js.Global().Call("alert", "browser might not support webgl")
 		return
 	}
-
 	config := renderer.InitialConfig{
 		Width:              width,
 		Height:             height,
@@ -219,26 +203,28 @@ func main() {
 		return
 	}
 	render.SetZoom(currentZoom)
-	defer render.Release()
-
-	x, y, z := render.GetSpeed()
+	//defer render.Release()
+	//x, y, z := render.GetSpeed()
+	x, y, z := -0.25, 0.25, 0.5
 	speedSliderX.Set("value", strconv.FormatFloat(float64(x), 'f', 0, 32))
 	speedSliderXValue.Set("innerHTML", strconv.FormatFloat(float64(x), 'f', 0, 32))
 	speedSliderY.Set("value", strconv.FormatFloat(float64(y), 'f', 0, 32))
 	speedSliderYValue.Set("innerHTML", strconv.FormatFloat(float64(y), 'f', 0, 32))
 	speedSliderZ.Set("value", strconv.FormatFloat(float64(z), 'f', 0, 32))
 	speedSliderZValue.Set("innerHTML", strconv.FormatFloat(float64(z), 'f', 0, 32))
-
-	var renderFrame js.Func
-	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		render.Render(this, args)
-		js.Global().Call("requestAnimationFrame", renderFrame)
-		return nil
-	})
-	js.Global().Call("requestAnimationFrame", renderFrame)
 }
 
-func canvasResize(this js.Value, args []js.Value) interface{} {
+// Renders one frame of the animation
+//go:export renderFrame
+func renderFrame(this js.Value, args []js.Value) {
+	render.Render(this, args)
+
+	// Keep the frame rendering going
+	js.Global().Call("requestAnimationFrame", js.Global().Get("renderFrame"))
+}
+
+//go:export canvasResize
+func canvasResize() interface{} {
 	width := canvasElement.Get("clientWidth").Int()
 	height := canvasElement.Get("clientHeight").Int()
 	canvasElement.Set("width", width)
@@ -247,33 +233,28 @@ func canvasResize(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func sliderChangeX(this js.Value, args []js.Value) interface{} {
-	var speed float32
-	sSpeed := this.Get("value").String()
-	//fmt.Sscan(sSpeed, &speed) // TODO: Figure out a replacement for fmt.Sscan()
-	render.SetSpeedX(speed)
-	speedSliderXValue.Set("innerHTML", sSpeed)
-	return nil
+//go:export sliderChangeX
+func sliderChangeX(val float64) {
+	println("Go value sliderChangeX = " + strconv.FormatFloat(val, 'f', 2, 64))
+	render.SetSpeedX(float32(val))
+	speedSliderXValue.Set("innerHTML", val)
 }
 
-func sliderChangeY(this js.Value, args []js.Value) interface{} {
-	var speed float32
-	sSpeed := this.Get("value").String()
-	//fmt.Sscan(sSpeed, &speed)
-	render.SetSpeedY(speed)
-	speedSliderYValue.Set("innerHTML", sSpeed)
-	return nil
+//go:export sliderChangeY
+func sliderChangeY(val float64) {
+	println("Go value sliderChangeY = " + strconv.FormatFloat(val, 'f', 2, 64))
+	render.SetSpeedY(float32(val))
+	speedSliderYValue.Set("innerHTML", val)
 }
 
-func sliderChangeZ(this js.Value, args []js.Value) interface{} {
-	var speed float32
-	sSpeed := this.Get("value").String()
-	//fmt.Sscan(sSpeed, &speed)
-	render.SetSpeedZ(speed)
-	speedSliderZValue.Set("innerHTML", sSpeed)
-	return nil
+//go:export sliderChangeZ
+func sliderChangeZ(val float64) {
+	println("Go value sliderChangeZ = " + strconv.FormatFloat(val, 'f', 2, 64))
+	render.SetSpeedZ(float32(val))
+	speedSliderZValue.Set("innerHTML", val)
 }
 
+//go:export zoomChange
 func zoomChange(this js.Value, args []js.Value) interface{} {
 	deltaY := args[0].Get("deltaY").Float()
 	deltaScale := 1 - (float32(deltaY) * 0.001)
