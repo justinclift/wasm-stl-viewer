@@ -224,13 +224,12 @@ func renderFrame(this js.Value, args []js.Value) {
 }
 
 //go:export canvasResize
-func canvasResize() interface{} {
+func canvasResize() {
 	width := canvasElement.Get("clientWidth").Int()
 	height := canvasElement.Get("clientHeight").Int()
 	canvasElement.Set("width", width)
 	canvasElement.Set("height", height)
 	render.SetSize(height, width)
-	return nil
 }
 
 //go:export sliderChangeX
@@ -255,10 +254,9 @@ func sliderChangeZ(val float64) {
 }
 
 //go:export zoomChange
-func zoomChange(this js.Value, args []js.Value) interface{} {
+func zoomChange(this js.Value, args []js.Value) {
 	deltaY := args[0].Get("deltaY").Float()
 	deltaScale := 1 - (float32(deltaY) * 0.001)
 	currentZoom *= deltaScale
 	render.SetZoom(currentZoom)
-	return nil
 }

@@ -5,7 +5,7 @@ var wasm;
 
 // Canvas resize callback
 function canvasResize() {
-  wasm.exports.canvasResize();
+    wasm.exports.canvasResize();
 }
 
 function sliderChangeX(evt) {
@@ -15,24 +15,25 @@ function sliderChangeX(evt) {
 }
 
 function sliderChangeY(evt) {
-  wasm.exports.sliderChangeY(evt.currentTarget.value);
+    wasm.exports.sliderChangeY(evt.currentTarget.value);
 }
 
 function sliderChangeZ(evt) {
-  wasm.exports.sliderChangeZ(evt.currentTarget.value);
+    wasm.exports.sliderChangeZ(evt.currentTarget.value);
 }
 
 function zoomChange(evt) {
-  wasm.exports.zoomChange(evt);
+    console.log(evt);
+    wasm.exports.zoomChange(evt);
 }
 
 // Render one frame of the animation
 function renderFrame(evt) {
-  wasm.exports.renderFrame(evt);
+    wasm.exports.renderFrame(evt);
 }
 
 function uploading(something) {
-  wasm.exports.uploading(something);
+    wasm.exports.uploading(something);
 }
 
 // Load and run the wasm
