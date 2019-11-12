@@ -8,7 +8,6 @@ import (
 	"strings"
 	"syscall/js"
 
-	"github.com/justinclift/wasm-stl-viewer/models"
 	"github.com/justinclift/wasm-stl-viewer/renderer"
 )
 
@@ -70,13 +69,13 @@ var canvasElement js.Value
 var currentZoom float32 = 3
 
 //go:export uploading
-func uploading(this js.Value, args []js.Value) interface{} {
-	files := this.Get("files")
-	file := files.Index(0)
-	currentFileName := file.Get("name").String()
-	println("Uploading", currentFileName)
-	reader.Call("readAsDataURL", file)
-	return nil
+func uploading(this js.Value) {
+	println("Uploading...")
+	//files := this.Get("files")
+	//file := files.Index(0)
+	//currentFileName := file.Get("name").String()
+	//println("Uploading", currentFileName)
+	//reader.Call("readAsDataURL", file)
 }
 
 func parseBase64File(input string) (output []byte, err error) {
@@ -91,31 +90,33 @@ func parseBase64File(input string) (output []byte, err error) {
 }
 
 //go:export uploaded
-func uploaded(this js.Value, args []js.Value) interface{} {
+func uploaded(this js.Value) {
+//func uploaded(this js.Value, args []js.Value) interface{} {
 	println("Finished uploading")
-	result := args[0].Get("target").Get("result").String()
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				println("Recovered in upload", r)
-				js.Global().Call("alert", "Failed to parse file")
-			}
-		}()
-		uploadedFile, err := parseBase64File(result)
-		if err != nil {
-			panic(err)
-		}
-		stlSolid, err := models.NewSTL(uploadedFile)
-		if err != nil {
-			js.Global().Call("alert", "Could not parse file")
-		}
-		vert, colors, indices := stlSolid.GetModel()
-		modelSize := getMaxScalar(vert)
-		currentZoom = modelSize * 3
-		render.SetZoom(currentZoom)
-		render.SetModel(colors, vert, indices)
-	}()
-	return nil
+	////result := args[0].Get("target").Get("result").String()
+	//result := "stuff"
+	//func() {
+	//	defer func() {
+	//		if r := recover(); r != nil {
+	//			println("Recovered in upload", r)
+	//			js.Global().Call("alert", "Failed to parse file")
+	//		}
+	//	}()
+	//	uploadedFile, err := parseBase64File(result)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	stlSolid, err := models.NewSTL(uploadedFile)
+	//	if err != nil {
+	//		js.Global().Call("alert", "Could not parse file")
+	//	}
+	//	vert, colors, indices := stlSolid.GetModel()
+	//	modelSize := getMaxScalar(vert)
+	//	currentZoom = modelSize * 3
+	//	render.SetZoom(currentZoom)
+	//	render.SetModel(colors, vert, indices)
+	//}()
+	//return nil
 }
 
 func getMaxScalar(vertices []float32) float32 {
@@ -135,13 +136,13 @@ func scalar(x float32, y float32, z float32) float32 {
 }
 
 //go:export uploadError
-func uploadError(this js.Value, args []js.Value) interface{} {
+func uploadError(this js.Value) interface{} {
 	println("Uploading Error")
 	return nil
 }
 
 //go:export uploadAborted
-func uploadAborted(this js.Value, args []js.Value) interface{} {
+func uploadAborted(this js.Value) interface{} {
 	println("Upload Aborted")
 	return nil
 }
@@ -155,8 +156,8 @@ func main() {
 	canvasElement.Set("width", width)
 	canvasElement.Set("height", height)
 
-	newReader := js.Global().Get("FileReader")
-	reader = newReader.New()
+	//newReader := js.Global().Get("FileReader")
+	//reader = newReader.New()
 
 	speedSliderX := doc.Call("getElementById", "speedSliderX")
 	speedSliderXValue = doc.Call("getElementById", "speedSliderXValue")
