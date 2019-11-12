@@ -220,6 +220,7 @@ func (r *Renderer) UpdateVerticesBuffer(buffer []float32) {
 func (r *Renderer) UpdateIndicesBuffer(buffer []uint32) {
 	println("Renderer.UpdateIndicesBuffer")
 	r.indices = webgl.SliceToTypedArray(buffer)
+
 	// Create index buffer
 	if r.indexBuffer == js.Undefined() {
 		r.indexBuffer = r.glContext.Call("createBuffer")
@@ -228,11 +229,10 @@ func (r *Renderer) UpdateIndicesBuffer(buffer []uint32) {
 	r.glContext.Call("bufferData", webgl.ELEMENT_ARRAY_BUFFER, r.indices, webgl.STATIC_DRAW)
 }
 
-func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
+func (r *Renderer) Render(now float64) {
 	// Calculate rotation rate
-	now := float32(args[0].Float())
-	tdiff := now - r.tmark
-	r.tmark = now
+	tdiff := float32(now) - r.tmark
+	r.tmark = float32(now)
 	r.rotationX = r.rotationX + r.speedX*float32(tdiff)/500
 	r.rotationY = r.rotationY + r.speedY*float32(tdiff)/500
 	r.rotationZ = r.rotationZ + r.speedZ*float32(tdiff)/500
@@ -257,8 +257,6 @@ func (r *Renderer) Render(this js.Value, args []js.Value) interface{} {
 
 	// Draw the cube
 	r.glContext.Call("drawElements", webgl.TRIANGLES, r.numIndices, webgl.UNSIGNED_INT, 0)
-
-	return nil
 }
 
 func (r *Renderer) SetZoom(currentZoom float32) {

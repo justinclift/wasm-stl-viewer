@@ -204,20 +204,22 @@ func main() {
 	}
 	render.SetZoom(currentZoom)
 	//defer render.Release()
-	//x, y, z := render.GetSpeed()
-	x, y, z := -0.25, 0.25, 0.5
-	speedSliderX.Set("value", strconv.FormatFloat(float64(x), 'f', 0, 32))
-	speedSliderXValue.Set("innerHTML", strconv.FormatFloat(float64(x), 'f', 0, 32))
-	speedSliderY.Set("value", strconv.FormatFloat(float64(y), 'f', 0, 32))
-	speedSliderYValue.Set("innerHTML", strconv.FormatFloat(float64(y), 'f', 0, 32))
-	speedSliderZ.Set("value", strconv.FormatFloat(float64(z), 'f', 0, 32))
-	speedSliderZValue.Set("innerHTML", strconv.FormatFloat(float64(z), 'f', 0, 32))
+	x, y, z := render.GetSpeed()
+	speedSliderX.Set("value", strconv.FormatFloat(float64(x), 'f', 2, 32))
+	speedSliderXValue.Set("innerHTML", strconv.FormatFloat(float64(x), 'f', 2, 32))
+	speedSliderY.Set("value", strconv.FormatFloat(float64(y), 'f', 2, 32))
+	speedSliderYValue.Set("innerHTML", strconv.FormatFloat(float64(y), 'f', 2, 32))
+	speedSliderZ.Set("value", strconv.FormatFloat(float64(z), 'f', 2, 32))
+	speedSliderZValue.Set("innerHTML", strconv.FormatFloat(float64(z), 'f', 2, 32))
+
+	// Begin the frame rendering
+	js.Global().Call("requestAnimationFrame", js.Global().Get("renderFrame"))
 }
 
 // Renders one frame of the animation
 //go:export renderFrame
-func renderFrame(this js.Value, args []js.Value) {
-	render.Render(this, args)
+func renderFrame(evt float64) {
+	render.Render(evt)
 
 	// Keep the frame rendering going
 	js.Global().Call("requestAnimationFrame", js.Global().Get("renderFrame"))
