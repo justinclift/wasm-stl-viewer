@@ -1,13 +1,16 @@
 all: wasm-stl-viewer
 
-wasm-stl-viewer: bundle.wasm main.go
-	go build -o wasm-stl-viewer main.go
+wasm-stl-viewer: docs/wasm.wasm server.go
+	go build -o wasm-stl-viewer server.go
 
-bundle.wasm: bundle.go
-	GOOS=js GOARCH=wasm go build -o bundle.wasm bundle.go
+docs/wasm.wasm: main.go
+	tinygo build -target wasm -no-debug -o docs/wasm.wasm main.go
+	wasm2wat docs/wasm.wasm -o docs/wasm.wat
+	wat2wasm docs/wasm.wat -o docs/wasm.wasm
+	rm -f docs/wasm.wat
 
-run: bundle.wasm wasm-stl-viewer
+run: docs/wasm.wasm wasm-stl-viewer
 	./wasm-stl-viewer
 
 clean:
-	rm -f wasm-stl-viewer *.wasm
+	rm -f server.wasm docs/wasm.wasm
