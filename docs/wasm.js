@@ -9,9 +9,9 @@ function canvasResize() {
 }
 
 function sliderChangeX(evt) {
-    let val = evt.currentTarget.value;
-    console.log("JS value = " + val);
-    wasm.exports.sliderChangeX(val);
+    // let val = evt.currentTarget.value;
+    // console.log("JS value = " + val);
+    wasm.exports.sliderChangeX(evt.currentTarget.value);
 }
 
 function sliderChangeY(evt) {
@@ -23,8 +23,8 @@ function sliderChangeZ(evt) {
 }
 
 function zoomChange(evt) {
-    console.log(evt);
-    wasm.exports.zoomChange(evt);
+    // console.log("JS event deltaY = " + evt.deltaY);
+    wasm.exports.zoomChange(evt.deltaY);
 }
 
 // Render one frame of the animation

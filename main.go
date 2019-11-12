@@ -254,9 +254,7 @@ func sliderChangeZ(val float64) {
 }
 
 //go:export zoomChange
-func zoomChange(this js.Value, args []js.Value) {
-	deltaY := args[0].Get("deltaY").Float()
-	deltaScale := 1 - (float32(deltaY) * 0.001)
-	currentZoom *= deltaScale
-	render.SetZoom(currentZoom)
+func zoomChange(deltaY float64) {
+	println("Go value deltaY = " + strconv.FormatFloat(deltaY, 'f', 2, 64))
+	render.SetZoom(float32(deltaY))
 }
