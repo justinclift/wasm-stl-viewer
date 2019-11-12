@@ -9,8 +9,6 @@ function canvasResize() {
 }
 
 function sliderChangeX(evt) {
-    // let val = evt.currentTarget.value;
-    // console.log("JS value = " + val);
     wasm.exports.sliderChangeX(evt.currentTarget.value);
 }
 
@@ -23,7 +21,6 @@ function sliderChangeZ(evt) {
 }
 
 function zoomChange(evt) {
-    // console.log("JS event deltaY = " + evt.deltaY);
     wasm.exports.zoomChange(evt.deltaY);
 }
 

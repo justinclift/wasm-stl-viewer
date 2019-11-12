@@ -184,6 +184,14 @@ func main() {
 		js.Global().Call("alert", "browser might not support webgl")
 		return
 	}
+
+	// Enable UNSIGNED_INT for WebGL drawTriangles() calls
+	ok := gl.Call("getExtension", "OES_element_index_uint")
+	if !ok.Truthy() {
+		println("Missing extension: OES_element_index_uint")
+		return
+	}
+
 	config := renderer.InitialConfig{
 		Width:              width,
 		Height:             height,
@@ -236,27 +244,23 @@ func canvasResize() {
 
 //go:export sliderChangeX
 func sliderChangeX(val float64) {
-	println("Go value sliderChangeX = " + strconv.FormatFloat(val, 'f', 2, 64))
 	render.SetSpeedX(float32(val))
 	speedSliderXValue.Set("innerHTML", val)
 }
 
 //go:export sliderChangeY
 func sliderChangeY(val float64) {
-	println("Go value sliderChangeY = " + strconv.FormatFloat(val, 'f', 2, 64))
 	render.SetSpeedY(float32(val))
 	speedSliderYValue.Set("innerHTML", val)
 }
 
 //go:export sliderChangeZ
 func sliderChangeZ(val float64) {
-	println("Go value sliderChangeZ = " + strconv.FormatFloat(val, 'f', 2, 64))
 	render.SetSpeedZ(float32(val))
 	speedSliderZValue.Set("innerHTML", val)
 }
 
 //go:export zoomChange
 func zoomChange(deltaY float64) {
-	println("Go value deltaY = " + strconv.FormatFloat(deltaY, 'f', 2, 64))
 	render.SetZoom(float32(deltaY))
 }

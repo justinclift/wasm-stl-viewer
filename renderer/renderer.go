@@ -94,9 +94,8 @@ func (r *Renderer) Release() {
 }
 
 func (r *Renderer) EnableObject() {
-	println("Renderer.EnableObject")
+	//println("Renderer.EnableObject")
 	r.glContext.Call("bindBuffer", webgl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
-	//r.glContext.Call("bindBuffer", r.glTypes.ElementArrayBuffer, r.indexBuffer)
 }
 
 func (r *Renderer) SetSpeedX(x float32) {
@@ -118,12 +117,12 @@ func (r *Renderer) GetSpeed() (x, y, z float32) {
 func (r *Renderer) SetSize(height, width int) {
 	r.height = height
 	r.width = width
-	println("Size", r.width, r.height)
+	//println("Size", r.width, r.height)
 }
 
 func (r *Renderer) createMatrixes() {
 	ratio := float32(r.width) / float32(r.height)
-	println("Renderer.createMatrixes")
+	//println("Renderer.createMatrixes")
 	// Generate and apply projection matrix
 	projMatrix := mgl32.Perspective(mgl32.DegToRad(45.0), ratio, 1, 100000.0)
 	var projMatrixBuffer *[16]float32
@@ -140,7 +139,7 @@ func (r *Renderer) createMatrixes() {
 }
 
 func (r *Renderer) setContextFlags() {
-	println("Renderer.setContextFlags")
+	//println("Renderer.setContextFlags")
 	// Set WebGL properties
 	r.glContext.Call("clearColor", 0.0, 0.0, 0.0, 1.0)    // Color the screen is cleared to
 	r.glContext.Call("clearDepth", 1.0)                   // Z value that is set to the Depth buffer every frame
@@ -149,7 +148,7 @@ func (r *Renderer) setContextFlags() {
 }
 
 func (r *Renderer) UpdateFragmentShader(shaderCode string) {
-	println("Renderer.UpdateFragmentShader")
+	//println("Renderer.UpdateFragmentShader")
 	// Create fragment shader object
 	r.fragShader = r.glContext.Call("createShader", webgl.FRAGMENT_SHADER)
 	r.glContext.Call("shaderSource", r.fragShader, shaderCode)
@@ -157,7 +156,7 @@ func (r *Renderer) UpdateFragmentShader(shaderCode string) {
 }
 
 func (r *Renderer) UpdateVertexShader(shaderCode string) {
-	println("Renderer.UpdateVertexShader")
+	//println("Renderer.UpdateVertexShader")
 	// Create vertex shader object
 	r.vertShader = r.glContext.Call("createShader", webgl.VERTEX_SHADER)
 	r.glContext.Call("shaderSource", r.vertShader, shaderCode)
@@ -165,7 +164,7 @@ func (r *Renderer) UpdateVertexShader(shaderCode string) {
 }
 
 func (r *Renderer) updateShaderProgram() {
-	println("Renderer.updateShaderProgram")
+	//println("Renderer.updateShaderProgram")
 	if r.fragShader == js.Undefined() || r.vertShader == js.Undefined() {
 		return
 	}
@@ -176,7 +175,7 @@ func (r *Renderer) updateShaderProgram() {
 }
 
 func (r *Renderer) attachShaderProgram() {
-	println("Renderer.attachShaderProgram")
+	//println("Renderer.attachShaderProgram")
 	// Associate attributes to vertex shader
 	r.PositionMatrix = r.glContext.Call("getUniformLocation", r.shaderProgram, "Pmatrix")
 	r.ViewMatrix = r.glContext.Call("getUniformLocation", r.shaderProgram, "Vmatrix")
@@ -196,7 +195,7 @@ func (r *Renderer) attachShaderProgram() {
 }
 
 func (r *Renderer) UpdateColorBuffer(buffer []float32) {
-	println("Renderer.UpdateColorBuffer")
+	//println("Renderer.UpdateColorBuffer")
 	r.colors = webgl.SliceToTypedArray(buffer)
 	// Create color buffer
 	if r.colorBuffer == js.Undefined() {
@@ -207,7 +206,7 @@ func (r *Renderer) UpdateColorBuffer(buffer []float32) {
 }
 
 func (r *Renderer) UpdateVerticesBuffer(buffer []float32) {
-	println("Renderer.UpdateVerticesBuffer")
+	//println("Renderer.UpdateVerticesBuffer")
 	r.vertices = webgl.SliceToTypedArray(buffer)
 	// Create vertex buffer
 	if r.vertexBuffer == js.Undefined() {
@@ -218,7 +217,7 @@ func (r *Renderer) UpdateVerticesBuffer(buffer []float32) {
 }
 
 func (r *Renderer) UpdateIndicesBuffer(buffer []uint32) {
-	println("Renderer.UpdateIndicesBuffer")
+	//println("Renderer.UpdateIndicesBuffer")
 	r.indices = webgl.SliceToTypedArray(buffer)
 
 	// Create index buffer
@@ -260,7 +259,7 @@ func (r *Renderer) Render(now float64) {
 }
 
 func (r *Renderer) SetZoom(currentZoom float32) {
-	println("Renderer.SetZoom")
+	//println("Renderer.SetZoom")
 	viewMatrix := mgl32.LookAtV(mgl32.Vec3{currentZoom, currentZoom, currentZoom}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
